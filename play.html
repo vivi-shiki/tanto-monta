@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover">
+	<meta name="theme-color" content="#444">
+	<meta charset="UTF-8">
+	<title>
+		Tanto Monta
+	</title>
+	<link rel="stylesheet" href="/fonts/fonts.css">
+	<link rel="stylesheet" href="/common/client.css">
+	<link rel="stylesheet" href="play.css">
+	<script defer src="/common/client.js"></script>
+	<script defer src="data.js"></script>
+	<script defer src="play.js"></script>
+</head>
+<body>
+
+<header>
+	<div id="toolbar">
+		<details>
+			<summary><img src="/images/cog.svg"></summary>
+			<menu>
+				<li><a href="info/rules.html" target="_blank">Rules</a>
+				<li class="separator">
+			</menu>
+		</details>
+	</div>
+</header>
+
+<aside>
+	<div id="roles"></div>
+	<div id="log"></div>
+</aside>
+
+<main data-min-zoom="0.25" data-max-zoom="2.0">
+	<div id="map">
+		<div id="pieces"></div>
+	</div>
+</main>
+
+<footer id="status"></footer>
+
+</body>
+</html>

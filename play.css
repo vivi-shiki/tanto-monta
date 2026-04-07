@@ -1,0 +1,271 @@
+/* === LAYOUT === */
+
+main { background-color: #3a5a40; }
+header { background-color: #2e2e2e; }
+
+/* === LOG === */
+
+#log { background-color: #faf3e0; }
+#log .h1 { background-color: #c9b896; border-top: 1px solid #555; border-bottom: 1px solid #555; font-weight: bold; text-align: center; }
+#log .h2 { background-color: #ddd2b8; border-top: 1px solid #888; border-bottom: 1px solid #888; text-align: center; }
+#log .h3 { background-color: #e8dcc8; text-align: center; }
+
+#log > div { padding-left: 20px; text-indent: -12px; }
+#log div.i { padding-left: 32px; text-indent: -12px; }
+#log div.ii { padding-left: 44px; text-indent: -12px; }
+#log div.bold { font-weight: bold; }
+
+/* === ROLES === */
+
+#role_France { background-color: #7bafd4; }
+#role_Spain { background-color: #e8c36a; }
+#role_Portugal { background-color: #7bc47b; }
+#role_Muslim { background-color: #d4a07b; }
+
+body.France header.your_turn { background-color: #5b8fb9; }
+body.Spain header.your_turn { background-color: #d4a832; }
+body.Portugal header.your_turn { background-color: #4a9e4a; }
+body.Muslim header.your_turn { background-color: #b87843; }
+
+/* === LOG POWER COLORS === */
+
+.regiontip { cursor: pointer; }
+.regiontip:hover { text-decoration: underline; }
+.unittip { font-weight: bold; }
+.cardtip { font-variant: small-caps; cursor: pointer; }
+.cardtip:hover { text-decoration: underline; }
+
+.unittip.power_france { color: #2a5fa0; }
+.unittip.power_spain { color: #a67c00; }
+.unittip.power_portugal { color: #1a7a1a; }
+.unittip.power_muslim { color: #8b4513; }
+
+/* === MAP === */
+
+#map {
+	position: absolute;
+	width: 2100px;
+	height: 1800px;
+	background-image: url(../tantomonta/public/tm/main.jpg);
+	background-size: cover;
+	background-repeat: no-repeat;
+}
+
+/* === REGIONS === */
+
+.region {
+	box-sizing: border-box;
+	position: absolute;
+	width: 60px;
+	height: 30px;
+	border: 2px solid transparent;
+	border-radius: 8px;
+	cursor: default;
+	z-index: 2;
+}
+
+.region.highlight {
+	border-color: gold;
+	box-shadow: 0 0 8px gold;
+	cursor: pointer;
+	z-index: 100;
+}
+
+.region.control_france { background-color: rgba(43, 95, 160, 0.25); }
+.region.control_spain { background-color: rgba(200, 160, 0, 0.25); }
+.region.control_portugal { background-color: rgba(26, 122, 26, 0.25); }
+.region.control_muslim { background-color: rgba(180, 100, 30, 0.25); }
+
+/* === UNITS === */
+
+.unit {
+	position: absolute;
+	width: 36px;
+	height: 36px;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	border-radius: 4px;
+	border: 1px solid #333;
+	cursor: default;
+	z-index: 5;
+}
+
+.unit.offmap { display: none; }
+
+.unit.highlight {
+	cursor: pointer;
+	box-shadow: 0 0 6px 2px gold;
+	z-index: 100;
+}
+
+.unit.reduced { opacity: 0.6; }
+
+.unit.power_france { border-color: #2a5fa0; }
+.unit.power_spain { border-color: #a67c00; }
+.unit.power_portugal { border-color: #1a7a1a; }
+.unit.power_muslim { border-color: #8b4513; }
+
+/* === COMMANDERS === */
+
+.commander {
+	position: absolute;
+	width: 40px;
+	height: 40px;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	border-radius: 50%;
+	border: 2px solid #333;
+	cursor: default;
+	z-index: 6;
+}
+
+.commander.offmap { display: none; }
+
+.commander.highlight {
+	cursor: pointer;
+	box-shadow: 0 0 6px 2px gold;
+	z-index: 100;
+}
+
+.commander.power_france { border-color: #2a5fa0; }
+.commander.power_spain { border-color: #a67c00; }
+.commander.power_portugal { border-color: #1a7a1a; }
+.commander.power_muslim { border-color: #8b4513; }
+
+/* === CARDS === */
+
+#hand {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 8px;
+	min-height: 120px;
+}
+
+.card {
+	width: 120px;
+	height: 168px;
+	border-radius: 8px;
+	border: 1px solid #555;
+	background-color: #f5f0e0;
+	background-size: cover;
+	background-repeat: no-repeat;
+	box-shadow: 1px 1px 3px #0004;
+	cursor: default;
+	transition: transform 100ms;
+}
+
+.card.highlight {
+	cursor: pointer;
+	box-shadow: 0 0 6px 2px gold;
+}
+
+.card.highlight:hover {
+	transform: translateY(-4px);
+}
+
+/* Card back images by type */
+.event_card { background-color: #e8dcc0; }
+
+/* Tooltip card */
+#tooltip {
+	pointer-events: none;
+	position: fixed;
+	z-index: 600;
+	right: 240px;
+	top: 60px;
+	width: 250px;
+	height: 350px;
+	background-size: cover;
+	background-repeat: no-repeat;
+	border-radius: 12px;
+	border: 1px solid #333;
+	box-shadow: 2px 2px 8px #0004;
+}
+
+#tooltip[hidden] { display: none; }
+
+@media (max-width: 800px) {
+	#tooltip {
+		top: 0; left: 0; right: 0; bottom: 0;
+		margin: auto;
+	}
+}
+
+/* Card image classes for event cards */
+.event_01 { background-image: url(../tantomonta/public/card/event_01.png); }
+.event_02 { background-image: url(../tantomonta/public/card/event_02.png); }
+.event_03 { background-image: url(../tantomonta/public/card/event_03.png); }
+.event_04 { background-image: url(../tantomonta/public/card/event_04.png); }
+.event_05 { background-image: url(../tantomonta/public/card/event_05.png); }
+.event_06 { background-image: url(../tantomonta/public/card/event_06.png); }
+.event_07 { background-image: url(../tantomonta/public/card/event_07.png); }
+.event_08 { background-image: url(../tantomonta/public/card/event_08.png); }
+.event_09 { background-image: url(../tantomonta/public/card/event_09.png); }
+.event_10 { background-image: url(../tantomonta/public/card/event_10.png); }
+.event_11 { background-image: url(../tantomonta/public/card/event_11.png); }
+.event_12 { background-image: url(../tantomonta/public/card/event_12.png); }
+.event_13 { background-image: url(../tantomonta/public/card/event_13.png); }
+.event_14 { background-image: url(../tantomonta/public/card/event_14.png); }
+.event_15 { background-image: url(../tantomonta/public/card/event_15.png); }
+.event_16 { background-image: url(../tantomonta/public/card/event_16.png); }
+.event_17 { background-image: url(../tantomonta/public/card/event_17.png); }
+.event_18 { background-image: url(../tantomonta/public/card/event_18.png); }
+.event_19 { background-image: url(../tantomonta/public/card/event_19.png); }
+.event_20 { background-image: url(../tantomonta/public/card/event_20.png); }
+.event_21 { background-image: url(../tantomonta/public/card/event_21.png); }
+.event_22 { background-image: url(../tantomonta/public/card/event_22.png); }
+.event_23 { background-image: url(../tantomonta/public/card/event_23.png); }
+.event_24 { background-image: url(../tantomonta/public/card/event_24.png); }
+.event_25 { background-image: url(../tantomonta/public/card/event_25.png); }
+.event_26 { background-image: url(../tantomonta/public/card/event_26.png); }
+.event_27 { background-image: url(../tantomonta/public/card/event_27.png); }
+.event_28 { background-image: url(../tantomonta/public/card/event_28.png); }
+.event_29 { background-image: url(../tantomonta/public/card/event_29.png); }
+.event_30 { background-image: url(../tantomonta/public/card/event_30.png); }
+.event_31 { background-image: url(../tantomonta/public/card/event_31.png); }
+.event_32 { background-image: url(../tantomonta/public/card/event_32.png); }
+.event_33 { background-image: url(../tantomonta/public/card/event_33.png); }
+.event_34 { background-image: url(../tantomonta/public/card/event_34.png); }
+.event_35 { background-image: url(../tantomonta/public/card/event_35.png); }
+.event_36 { background-image: url(../tantomonta/public/card/event_36.png); }
+.event_37 { background-image: url(../tantomonta/public/card/event_37.png); }
+.event_38 { background-image: url(../tantomonta/public/card/event_38.png); }
+.event_39 { background-image: url(../tantomonta/public/card/event_39.png); }
+.event_40 { background-image: url(../tantomonta/public/card/event_40.png); }
+.event_41 { background-image: url(../tantomonta/public/card/event_41.png); }
+.event_42 { background-image: url(../tantomonta/public/card/event_42.png); }
+.event_43 { background-image: url(../tantomonta/public/card/event_43.png); }
+.event_44 { background-image: url(../tantomonta/public/card/event_44.png); }
+.event_45 { background-image: url(../tantomonta/public/card/event_45.png); }
+.event_46 { background-image: url(../tantomonta/public/card/event_46.png); }
+.event_47 { background-image: url(../tantomonta/public/card/event_47.png); }
+.event_48 { background-image: url(../tantomonta/public/card/event_48.png); }
+.event_49 { background-image: url(../tantomonta/public/card/event_49.png); }
+.event_50 { background-image: url(../tantomonta/public/card/event_50.png); }
+.event_51 { background-image: url(../tantomonta/public/card/event_51.png); }
+.event_52 { background-image: url(../tantomonta/public/card/event_52.png); }
+.event_53 { background-image: url(../tantomonta/public/card/event_53.png); }
+.event_54 { background-image: url(../tantomonta/public/card/event_54.png); }
+.event_55 { background-image: url(../tantomonta/public/card/event_55.png); }
+.event_56 { background-image: url(../tantomonta/public/card/event_56.png); }
+.event_57 { background-image: url(../tantomonta/public/card/event_57.png); }
+.event_58 { background-image: url(../tantomonta/public/card/event_58.png); }
+.event_59 { background-image: url(../tantomonta/public/card/event_59.png); }
+.event_60 { background-image: url(../tantomonta/public/card/event_60.png); }
+.event_61 { background-image: url(../tantomonta/public/card/event_61.png); }
+.event_62 { background-image: url(../tantomonta/public/card/event_62.png); }
+.event_63 { background-image: url(../tantomonta/public/card/event_63.png); }
+.event_64 { background-image: url(../tantomonta/public/card/event_64.png); }
+
+/* === STATUS BAR === */
+
+#status {
+	padding: 4px 8px;
+	font-size: 14px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
