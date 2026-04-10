@@ -5,8 +5,8 @@
 const { regions, units, commanders, cards, home_cards, adjacency, sea_connections, ELIMINATED, AVAILABLE, POWER_CLASS } = data
 
 // Map dimensions (match the tm/main.jpg image)
-const MAP_W = 2100
-const MAP_H = 1800
+const MAP_W = 5298
+const MAP_H = 3449
 
 const UNIT_SIZE = 36
 const COMMANDER_SIZE = 40
