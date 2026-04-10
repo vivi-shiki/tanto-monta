@@ -25,7 +25,7 @@ let ui = {
 	card_elements: [],
 }
 
-let view = null
+let gameView = null
 
 // === MAP GET (binary search on sorted pair array) ===
 
@@ -100,10 +100,10 @@ function build_card(c) {
 
 function on_click_region(evt) {
 	let r = evt.currentTarget.region
-	if (view.actions) {
-		if (view.actions.region && view.actions.region.includes(r))
+	if (gameView.actions) {
+		if (gameView.actions.region && gameView.actions.region.includes(r))
 			send_action("region", r)
-		else if (view.actions.move_to && view.actions.move_to.includes(r))
+		else if (gameView.actions.move_to && gameView.actions.move_to.includes(r))
 			send_action("move_to", r)
 	}
 }
@@ -119,10 +119,10 @@ function on_blur_region() {
 
 function on_click_unit(evt) {
 	let u = evt.currentTarget.unit
-	if (view.actions) {
-		if (view.actions.unit && view.actions.unit.includes(u))
+	if (gameView.actions) {
+		if (gameView.actions.unit && gameView.actions.unit.includes(u))
 			send_action("unit", u)
-		if (view.actions.piece && view.actions.piece.includes(u))
+		if (gameView.actions.piece && gameView.actions.piece.includes(u))
 			send_action("piece", u)
 	}
 }
@@ -130,7 +130,7 @@ function on_click_unit(evt) {
 function on_focus_unit(evt) {
 	let u = evt.currentTarget.unit
 	let unit = units[u]
-	let loc = view.location[u]
+	let loc = gameView.location[u]
 	let where = loc >= 0 ? regions[loc].name : (loc === ELIMINATED ? "Eliminated" : "Available")
 	ui.status.textContent = unit.name + " in " + where
 }
@@ -141,8 +141,8 @@ function on_blur_unit() {
 
 function on_click_commander(evt) {
 	let c = evt.currentTarget.commander
-	if (view.actions) {
-		if (view.actions.commander && view.actions.commander.includes(c))
+	if (gameView.actions) {
+		if (gameView.actions.commander && gameView.actions.commander.includes(c))
 			send_action("commander", c)
 	}
 }
@@ -150,7 +150,7 @@ function on_click_commander(evt) {
 function on_focus_commander(evt) {
 	let c = evt.currentTarget.commander
 	let cmd = commanders[c]
-	let loc = view.commander_location[c]
+	let loc = gameView.commander_location[c]
 	let where = loc >= 0 ? regions[loc].name : "Off map"
 	ui.status.textContent = cmd.name + " (" + cmd.command + "/" + cmd.admin + ") in " + where
 }
@@ -161,10 +161,10 @@ function on_blur_commander() {
 
 function on_click_card(evt) {
 	let c = evt.currentTarget.card_id
-	if (view.actions) {
-		if (view.actions.card && view.actions.card.includes(c))
+	if (gameView.actions) {
+		if (gameView.actions.card && gameView.actions.card.includes(c))
 			send_action("card", c)
-		if (view.actions.play_card && view.actions.play_card.includes(c))
+		if (gameView.actions.play_card && gameView.actions.play_card.includes(c))
 			send_action("play_card", c)
 	}
 }
@@ -197,13 +197,13 @@ function layout_region_stack(r) {
 	// Collect units in this region
 	let unit_list = []
 	for (let u = 0; u < units.length; ++u)
-		if (view.location[u] === r)
+		if (gameView.location[u] === r)
 			unit_list.push(u)
 
 	// Collect commanders in this region
 	let cmd_list = []
 	for (let c = 0; c < commanders.length; ++c)
-		if (view.commander_location[c] === r)
+		if (gameView.commander_location[c] === r)
 			cmd_list.push(c)
 
 	// Layout units in a stack
@@ -224,15 +224,15 @@ function layout_region_stack(r) {
 	for (let u of unit_list) {
 		let elt = ui.unit_elements[u]
 		elt.classList.remove("offmap")
-		elt.classList.toggle("reduced", view.reduced.includes(u))
+		elt.classList.toggle("reduced", gameView.reduced.includes(u))
 		elt.style.left = Math.floor(sx + i * STACK_DX) + "px"
 		elt.style.top = Math.floor(sy) + "px"
 		elt.style.zIndex = 10 + i
 
 		// Highlight selectable units
-		if (view.actions && view.actions.unit && view.actions.unit.includes(u))
+		if (gameView.actions && gameView.actions.unit && gameView.actions.unit.includes(u))
 			elt.classList.add("highlight")
-		else if (view.actions && view.actions.piece && view.actions.piece.includes(u))
+		else if (gameView.actions && gameView.actions.piece && gameView.actions.piece.includes(u))
 			elt.classList.add("highlight")
 		else
 			elt.classList.remove("highlight")
@@ -243,7 +243,7 @@ function layout_region_stack(r) {
 // === UPDATE ===
 
 function update_map() {
-	if (!view)
+	if (!gameView)
 		return
 
 	// Hide all pieces first
@@ -260,16 +260,16 @@ function update_map() {
 	for (let r = 0; r < regions.length; ++r) {
 		let elt = ui.spaces[r]
 		elt.classList.remove("control_france", "control_spain", "control_portugal", "control_muslim")
-		let ctrl = map_get(view.control, r, -1)
+		let ctrl = map_get(gameView.control, r, -1)
 		if (ctrl >= 0)
 			elt.classList.add("control_" + POWER_CLASS[ctrl])
 
 		// Highlight selectable regions
 		let selectable = false
-		if (view.actions) {
-			if (view.actions.region && view.actions.region.includes(r))
+		if (gameView.actions) {
+			if (gameView.actions.region && gameView.actions.region.includes(r))
 				selectable = true
-			if (view.actions.move_to && view.actions.move_to.includes(r))
+			if (gameView.actions.move_to && gameView.actions.move_to.includes(r))
 				selectable = true
 		}
 		elt.classList.toggle("highlight", selectable)
@@ -281,7 +281,7 @@ function update_map() {
 
 	// Highlight selectable commanders
 	for (let c = 0; c < commanders.length; ++c) {
-		if (view.actions && view.actions.commander && view.actions.commander.includes(c))
+		if (gameView.actions && gameView.actions.commander && gameView.actions.commander.includes(c))
 			ui.commander_elements[c].classList.add("highlight")
 	}
 
@@ -295,13 +295,13 @@ function update_hand() {
 		return
 	hand_el.replaceChildren()
 
-	if (view.hand) {
-		for (let c of view.hand) {
+	if (gameView.hand) {
+		for (let c of gameView.hand) {
 			let elt = ui.card_elements[c]
 			if (elt) {
 				elt.classList.toggle("highlight",
-					(view.actions && view.actions.card && view.actions.card.includes(c)) ||
-					(view.actions && view.actions.play_card && view.actions.play_card.includes(c))
+					(gameView.actions && gameView.actions.card && gameView.actions.card.includes(c)) ||
+					(gameView.actions && gameView.actions.play_card && gameView.actions.play_card.includes(c))
 				)
 				hand_el.appendChild(elt)
 			}
@@ -379,3 +379,7 @@ if (typeof on_log !== "undefined") {
 		return text
 	}
 }
+
+// Expose callbacks to global scope for client.js
+window.on_init = on_init
+window.on_update = on_update
