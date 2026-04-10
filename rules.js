@@ -238,6 +238,7 @@ function on_view() {
 
 	V.impulse = G.impulse
 	V.power = R
+	V.passed = G.passed
 }
 
 // === GAME FLOW ===
@@ -358,8 +359,7 @@ P.player_impulse = {
 				if (own_units_in_region(r).length > 0)
 					action("select_move_from", r)
 			}
-			if (G.ops === 0)
-				button("end_impulse")
+			button("end_impulse")
 		} else {
 			prompt("Play a card from your hand or pass.")
 			var hand = current_hand()
@@ -376,7 +376,7 @@ P.player_impulse = {
 			G.hand[R].splice(idx, 1)
 			G.discard.push(c)
 			G.ops = card_ops(c)
-			log(power_name(R) + " plays card #" + c + " for " + G.ops + " OP.")
+			log(power_name(R) + " plays C" + c + " for " + G.ops + " OP.")
 		}
 	},
 
@@ -423,7 +423,7 @@ function do_recruit(region, type, cost) {
 	var u = avail[0]
 	G.location[u] = region
 	G.ops -= cost
-	log(power_name(R) + " recruits " + unit_name(u) + " in " + region_name(region) + ".")
+	log(power_name(R) + " recruits U" + u + " in R" + region + ".")
 }
 
 // === MOVEMENT ===
@@ -459,7 +459,7 @@ P.select_move_to = {
 			G.commander_location[c] = to
 
 		G.ops -= 1
-		log(power_name(R) + " moves " + moved + " units from " + region_name(from) + " to " + region_name(to) + ".")
+		log(power_name(R) + " moves " + moved + " units from R" + from + " to R" + to + ".")
 		goto("player_impulse")
 	},
 
