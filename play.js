@@ -23,9 +23,54 @@ let ui = {
 	unit_elements: [],
 	commander_elements: [],
 	card_elements: [],
+	hex_markers: [],
 }
 
 let gameView = null
+let hexData = null
+
+function load_hex_data() {
+	// Load hex.json asynchronously
+	if (hexData !== null) {
+		return Promise.resolve(hexData)
+	}
+
+	return fetch('./hex.json')
+		.then(response => response.json())
+		.then(data => {
+			hexData = data
+			return data
+		})
+		.catch(error => {
+			console.error("Failed to load hex.json:", error)
+			hexData = []
+			return []
+		})
+}
+
+function render_hex_markers() {
+	if (!hexData || !Array.isArray(hexData)) {
+		console.warn("Hex data not available")
+		return
+	}
+
+	// Clear previous markers
+	ui.hex_markers.forEach(marker => marker.remove())
+	ui.hex_markers = []
+
+	// Create a marker for each hex
+	hexData.forEach(hex => {
+		const marker = document.createElement("div")
+		marker.className = "hex-marker"
+		marker.style.left = hex.x + "px"
+		marker.style.top = hex.y + "px"
+		marker.title = `Hex: ${hex.id || 'unknown'}`
+		ui.pieces.appendChild(marker)
+		ui.hex_markers.push(marker)
+	})
+
+	console.log(`Rendered ${ui.hex_markers.length} hex markers`)
+}
 
 // === MAP GET (binary search on sorted pair array) ===
 
@@ -327,6 +372,11 @@ function on_init() {
 	// Build cards
 	for (let c = 1; c < cards.length; ++c)
 		build_card(c)
+
+	// Load hex data and render markers asynchronously
+	load_hex_data().then(() => {
+		render_hex_markers()
+	})
 }
 
 function on_update() {
