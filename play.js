@@ -4,15 +4,9 @@
 
 const { regions, units, commanders, cards, home_cards, adjacency, sea_connections } = data
 
-const FRANCE = 0
-const SPAIN = 1
-const PORTUGAL = 2
-const MUSLIM = 3
-
 const ELIMINATED = -1
 const AVAILABLE = -2
 
-const POWER_NAME = ["France", "Spain", "Portugal", "Muslim"]
 const POWER_CLASS = ["france", "spain", "portugal", "muslim"]
 
 // Map dimensions (match the tm/main.jpg image)
