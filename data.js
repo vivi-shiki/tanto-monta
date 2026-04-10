@@ -350,6 +350,37 @@ data.recruit_cost = {
 
 data.stacking_limit = 4
 
+// === CONSTANTS (exported for use in rules.js and play.js) ===
+
+// Powers
+data.FRANCE = FRANCE
+data.SPAIN = SPAIN
+data.PORTUGAL = PORTUGAL
+data.MUSLIM = MUSLIM
+
+// Unit types
+data.MILITIA = MILITIA
+data.REGULAR = REGULAR
+data.CAVALRY = CAVALRY
+data.ARTILLERY = ARTILLERY
+data.GALLEY = GALLEY
+data.NAO = NAO
+data.CORSAIR = CORSAIR
+
+// Region types
+data.NORMAL = NORMAL
+data.STRATEGIC = STRATEGIC
+data.KEY = KEY
+data.FORTRESS = FORTRESS
+data.SPECIAL = SPECIAL
+
+// Special locations
+data.ELIMINATED = -1
+data.AVAILABLE = -2
+
+// CSS class mappings
+data.POWER_CLASS = ["france", "spain", "portugal", "muslim"]
+
 // === EXPORT ===
 
 if (typeof module !== "undefined")

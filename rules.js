@@ -9,22 +9,14 @@ const P = {}
 const ROLES = ["France", "Spain", "Portugal", "Muslim"]
 const SCENARIOS = ["Standard"]
 
+// Import constants from data.js
+const { FRANCE, SPAIN, PORTUGAL, MUSLIM, MILITIA, REGULAR, CAVALRY, ELIMINATED, AVAILABLE } = data
+
+// Game-specific constants
 const R_FRANCE = 0
 const R_SPAIN = 1
 const R_PORTUGAL = 2
 const R_MUSLIM = 3
-
-const FRANCE = 0
-const SPAIN = 1
-const PORTUGAL = 2
-const MUSLIM = 3
-
-const MILITIA = 0
-const REGULAR = 1
-const CAVALRY = 2
-
-const ELIMINATED = -1
-const AVAILABLE = -2
 
 const MAX_TURNS = 7
 
@@ -214,31 +206,6 @@ function on_setup(scenario, options) {
 	G.active = R_FRANCE
 
 	call("main_game")
-}
-
-// === VIEW ===
-
-function on_view() {
-	V.turn = G.turn
-	V.vp = G.vp
-	V.control = G.control
-
-	V.location = G.location
-	V.reduced = G.reduced
-	V.commander_location = G.commander_location
-
-	V.ops = G.ops
-
-	// Only show own hand
-	V.hand = G.hand[R] || []
-	V.hand_size = G.hand.map(h => h.length)
-
-	V.deck_size = G.deck.length
-	V.discard_size = G.discard.length
-
-	V.impulse = G.impulse
-	V.power = R
-	V.passed = G.passed
 }
 
 // === GAME FLOW ===
@@ -619,14 +586,29 @@ exports.view = function (state, role) {
 	G = state
 	L = G.L
 	R = role
+
+	// Initialize view object with complete game state
 	V = {
 		log: G.log,
 		prompt: null,
+		turn: G.turn,
+		vp: G.vp,
+		control: G.control,
+		location: G.location,
+		reduced: G.reduced,
+		commander_location: G.commander_location,
+		ops: G.ops,
+		hand: G.hand[R] || [],
+		hand_size: G.hand.map(h => h.length),
+		deck_size: G.deck.length,
+		discard_size: G.discard.length,
+		impulse: G.impulse,
+		power: R,
+		passed: G.passed,
 	}
 
 	if ((Array.isArray(G.active) && G.active.includes(R)) || G.active === R) {
 		_load()
-		on_view()
 
 		V.actions = {}
 
@@ -646,7 +628,6 @@ exports.view = function (state, role) {
 		_save()
 	} else {
 		_load()
-		on_view()
 		_save()
 
 		if (G.active === "None") {

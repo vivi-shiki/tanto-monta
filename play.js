@@ -2,12 +2,7 @@
 
 /* globals data */
 
-const { regions, units, commanders, cards, home_cards, adjacency, sea_connections } = data
-
-const ELIMINATED = -1
-const AVAILABLE = -2
-
-const POWER_CLASS = ["france", "spain", "portugal", "muslim"]
+const { regions, units, commanders, cards, home_cards, adjacency, sea_connections, ELIMINATED, AVAILABLE, POWER_CLASS } = data
 
 // Map dimensions (match the tm/main.jpg image)
 const MAP_W = 2100
