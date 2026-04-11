@@ -2,7 +2,7 @@
 
 /* globals data */
 
-const { regions, units, commanders, cards, home_cards, adjacency, sea_connections, ELIMINATED, AVAILABLE, POWER_CLASS } = data
+const { regions, units, commanders, cards, ELIMINATED, POWER_CLASS } = data
 
 // Map dimensions (match the tm/main.jpg image)
 const MAP_W = 5298
@@ -23,72 +23,9 @@ let ui = {
 	unit_elements: [],
 	commander_elements: [],
 	card_elements: [],
-	hex_markers: [],
 }
 
 let gameView = null
-let hexData = null
-
-function load_hex_data() {
-	// Load hex.json asynchronously
-	if (hexData !== null) {
-		return Promise.resolve(hexData)
-	}
-
-	return fetch('./hex.json')
-		.then(response => response.json())
-		.then(data => {
-			hexData = data
-			return data
-		})
-		.catch(error => {
-			console.error("Failed to load hex.json:", error)
-			hexData = []
-			return []
-		})
-}
-
-function render_hex_markers() {
-	if (!hexData || !Array.isArray(hexData)) {
-		console.warn("Hex data not available")
-		return
-	}
-
-	// Clear previous markers
-	ui.hex_markers.forEach(marker => marker.remove())
-	ui.hex_markers = []
-
-	// Create a marker for each hex
-	hexData.forEach(hex => {
-		const marker = document.createElement("div")
-		marker.className = "hex-marker"
-		marker.style.left = hex.x + "px"
-		marker.style.top = hex.y + "px"
-		marker.title = `Hex: ${hex.id || 'unknown'}`
-		ui.pieces.appendChild(marker)
-		ui.hex_markers.push(marker)
-	})
-
-	console.log(`Rendered ${ui.hex_markers.length} hex markers`)
-}
-
-// === MAP GET (binary search on sorted pair array) ===
-
-function map_get(map, key, missing) {
-	let a = 0
-	let b = (map.length >> 1) - 1
-	while (a <= b) {
-		let m = (a + b) >> 1
-		let x = map[m << 1]
-		if (key < x)
-			b = m - 1
-		else if (key > x)
-			a = m + 1
-		else
-			return map[(m << 1) + 1]
-	}
-	return missing
-}
 
 // === BUILD UI ===
 
@@ -97,8 +34,8 @@ function build_region(r) {
 	let elt = document.createElement("div")
 	elt.className = "region"
 	elt.region = r
-	elt.style.left = (region.x - 30) + "px"
-	elt.style.top = (region.y - 15) + "px"
+	elt.style.left = (region.x - 55) + "px"
+	elt.style.top = (region.y - 55) + "px"
 	elt.addEventListener("click", on_click_region)
 	elt.addEventListener("mouseenter", on_focus_region)
 	elt.addEventListener("mouseleave", on_blur_region)
@@ -269,7 +206,7 @@ function layout_region_stack(r) {
 	for (let u of unit_list) {
 		let elt = ui.unit_elements[u]
 		elt.classList.remove("offmap")
-		elt.classList.toggle("reduced", gameView.reduced.includes(u))
+		elt.classList.toggle("reduced", !!gameView.reduced[u])
 		elt.style.left = Math.floor(sx + i * STACK_DX) + "px"
 		elt.style.top = Math.floor(sy) + "px"
 		elt.style.zIndex = 10 + i
@@ -305,7 +242,7 @@ function update_map() {
 	for (let r = 0; r < regions.length; ++r) {
 		let elt = ui.spaces[r]
 		elt.classList.remove("control_france", "control_spain", "control_portugal", "control_muslim")
-		let ctrl = map_get(gameView.control, r, -1)
+		let ctrl = gameView.control[r] ?? -1
 		if (ctrl >= 0)
 			elt.classList.add("control_" + POWER_CLASS[ctrl])
 
@@ -373,10 +310,6 @@ function on_init() {
 	for (let c = 1; c < cards.length; ++c)
 		build_card(c)
 
-	// Load hex data and render markers asynchronously
-	load_hex_data().then(() => {
-		render_hex_markers()
-	})
 }
 
 function on_update() {

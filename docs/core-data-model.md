@@ -142,11 +142,12 @@ G.hand[power] = []
 
 ## 6. 地区 Region
 
-地区是地图节点。静态结构继续使用当前 `data.regions` 和 `data.adjacency`：
+地区是地图节点。`hex.json` 是地图节点和连接关系的来源；`data.js` 中的 `data.regions`、`data.adjacency` 和 `data.sea_connections` 由 `hex.json` 生成，规则层只使用数字索引。
 
 ```js
 data.regions[region_id] = {
   id,
+  hex_id,
   name,
   type,
   homeland,
@@ -166,6 +167,8 @@ G.commander_location[commander] = region
 ```
 
 不在 `region` 对象上存单位数组。需要某地区的单位时，通过 `units_in_region(region)`、`own_units_in_region(region)` 等 helper 从 `G.location` 推导。
+
+当前 `hex.json` 只有 UUID、坐标、connections、`regionType`、`homeland`、`isPort` 字段，并且现有数据中 `regionType` 全是 `normal`、`homeland` 全是 `null`、`isPort` 全是 `false`。因此 VP、港口、家园归属和初始控制仍然是后续需要补充的规则数据。
 
 ## 7. 编队 Formation
 
@@ -254,6 +257,7 @@ G.region_events[region] = ["morisco_uprising"]
 - `data.players`：玩家席位与可控势力。
 - `data.powers` / `data.power_to_player`：势力定义与默认玩家归属。
 - `data.atomic_actions`：原子行动清单。
+- `data.regions` / `data.adjacency`：从 `hex.json` 生成的 213 个地图节点和连接关系。
 - `data.events`：事件 buff 清单的初始占位。
 - 卡牌默认 `type/actions/image/text`。
 - 单位默认 `kind/quantity`。
@@ -265,6 +269,7 @@ G.region_events[region] = ["morisco_uprising"]
 
 仍待后续实现：
 
+- 在 `hex.json` 或补充数据中标注真实地区名称、regionType、homeland、isPort、VP 和初始控制。
 - 卡牌事件执行器，把 `card.event` 转为修改 `G.power_events`、`G.relations`、地图控制或单位状态的逻辑。
 - 地区事件 `G.region_events`。
 - 多势力同玩家控制时的合并手牌/行动权限策略。

@@ -136,11 +136,15 @@ function expectAction(view, action, arg) {
 2. `data.powers` 应定义四个势力，每个势力拥有稳定的 `id`、`name`、`role` 和 `class_name`。
 3. `data.power_to_player` 应把每个势力映射到一个默认玩家席位。
 4. `data.atomic_actions` 应包含 `play_card_ops`、`play_event`、`pass`、`recruit_unit`、`move_formation`、`field_battle`、`siege`、`naval_move`、`explore`、`diplomacy`。
-5. 每张普通卡牌都应有 `type`、`actions`、`image` 和 `text` 字段。
-6. 每张普通卡牌的 `actions` 至少应包含 `play_card_ops`；后续有事件文本的卡牌还应能包含 `play_event`。
-7. 每个单位都应有 `type`、`kind`、`power`、`quantity`、`strength` 和 `image`。
-8. `data.events` 应定义事件 buff 的 `id`、`name`、`scope`、`description` 和 `effects`。
-9. 外交关系常量应包括 war、neutral、alliance、self，并且数值能用于关系矩阵。
+5. `data.regions.length` 应等于 `hex.json.length`，当前为 213。
+6. 每个 `data.regions[i].hex_id` 应等于 `hex.json[i].id`。
+7. 每个 `data.adjacency[i]` 应等于 `hex.json[i].connections` 映射成的 region index 列表。
+8. `data.sea_connections` 应只包含最终 `data.regions` 中双方都标记 `is_port` 的邻接节点；当前以 `hex.json` 连接为底，再叠加旧 MVP 地区语义后为 23 条。
+9. 每张普通卡牌都应有 `type`、`actions`、`image` 和 `text` 字段。
+10. 每张普通卡牌的 `actions` 至少应包含 `play_card_ops`；后续有事件文本的卡牌还应能包含 `play_event`。
+11. 每个单位都应有 `type`、`kind`、`power`、`quantity`、`strength` 和 `image`。
+12. `data.events` 应定义事件 buff 的 `id`、`name`、`scope`、`description` 和 `effects`。
+13. 外交关系常量应包括 war、neutral、alliance、self，并且数值能用于关系矩阵。
 
 ### B. 模组契约与 setup
 
@@ -288,3 +292,4 @@ function expectAction(view, action, arg) {
 - 当前 `view()` 对传入 role 的 hand 直接返回，后续要明确 Observer 和信息隐藏策略。
 - 当前 `G.players` 只保存玩家控制的势力，不保存手牌副本；手牌仍以 `G.hand[power]` 为唯一真相。
 - 当前 `G.power_events` 和 `G.relations` 已初始化，但还没有事件牌/外交 action 会修改它们。
+- 当前地图节点已从 `hex.json` 接入，但 `hex.json` 仍缺真实名称、家园、港口、VP 和地区类型数据；现阶段把旧 MVP 地区语义映射到最接近的 hex 上，相关测试应先覆盖连接一致性和语义覆盖结果，再把完整规则语义作为待补数据。

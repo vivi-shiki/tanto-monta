@@ -81,6 +81,7 @@ PoG 的规模很大，但模式可以直接迁移：
 - 隐藏信息必须由 `view()` 控制。例如手牌只给当前角色；其他玩家只看到手牌数量。
 - 地图控制、棋子位置、卡牌区最好用稳定索引数组表示，便于 JSON 存储、replay 和测试断言。
 - 核心对象关系采用组合式结构。玩家、势力、卡牌、原子行动、地区、编队、单位、事件的具体方案见 `docs/core-data-model.md`。
+- Tanto Monta 的地图节点以 `hex.json` 为来源；`data.regions` 和 `data.adjacency` 应与 `hex.json` 保持同步。
 
 当前 Tanto Monta 已有的主干状态包括：
 

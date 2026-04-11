@@ -51,28 +51,15 @@ body.Muslim header.your_turn { background-color: #b87843; }
 	background-repeat: no-repeat;
 }
 
-/* === HEX MARKERS === */
-
-.hex-marker {
-	position: absolute;
-	width: 110px;
-	height: 110px;
-	background-color: #ff0000;
-	border-radius: 0;
-	transform: translate(-50%, -50%);
-	z-index: 3;
-	opacity: 0.7;
-}
-
 /* === REGIONS === */
 
 .region {
 	box-sizing: border-box;
 	position: absolute;
-	width: 60px;
-	height: 30px;
+	width: 110px;
+	height: 110px;
 	border: 2px solid transparent;
-	border-radius: 8px;
+	clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
 	cursor: default;
 	z-index: 2;
 }
