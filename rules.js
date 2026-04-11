@@ -174,9 +174,96 @@ function create_formation_from_region(region) {
 	}
 }
 
+function clone_players() {
+	return data.players.map(p => ({
+		powers: p.powers.slice(),
+	}))
+}
+
+function valid_players(players) {
+	return Array.isArray(players) && players.length === data.players.length && players.every(p => p && Array.isArray(p.powers))
+}
+
+function migrate_legacy_region_index(region) {
+	if (Array.isArray(data.legacy_region) && region >= 0 && region < data.legacy_region.length)
+		return data.legacy_region[region]
+	return region
+}
+
+function migrate_legacy_region_array(array) {
+	if (!Array.isArray(array))
+		return array
+	for (var i = 0; i < array.length; ++i)
+		array[i] = migrate_legacy_region_index(array[i])
+	return array
+}
+
+function normalize_state() {
+	if (!valid_players(G.players))
+		G.players = clone_players()
+	if (!Array.isArray(G.power_player))
+		G.power_player = data.power_to_player.slice()
+	if (!Array.isArray(G.power_events))
+		G.power_events = data.powers.map(() => [])
+	if (!Array.isArray(G.relations))
+		G.relations = create_relation_matrix()
+
+	if (!Array.isArray(G.hand))
+		G.hand = [[], [], [], []]
+	for (var p = 0; p < data.powers.length; ++p)
+		if (!Array.isArray(G.hand[p]))
+			G.hand[p] = []
+	if (!Array.isArray(G.hand_size))
+		G.hand_size = data.scenarios.Standard.hand_size.slice()
+
+	if (!Array.isArray(G.location))
+		G.location = new Array(data.units.length).fill(AVAILABLE)
+	if (!Array.isArray(G.commander_location))
+		G.commander_location = new Array(data.commanders.length).fill(AVAILABLE)
+	if (!Array.isArray(G.reduced))
+		G.reduced = new Array(data.units.length).fill(false)
+
+	var legacy_regions = Array.isArray(data.legacy_region) ? data.legacy_region.length : 0
+	var uses_legacy_regions = legacy_regions > 0 && Array.isArray(G.control) && G.control.length === legacy_regions
+	if (uses_legacy_regions) {
+		var control = new Array(data.regions.length).fill(-1)
+		for (var r = 0; r < G.control.length; ++r)
+			control[data.legacy_region[r]] = G.control[r]
+		G.control = control
+		migrate_legacy_region_array(G.location)
+		migrate_legacy_region_array(G.commander_location)
+	} else if (!Array.isArray(G.control)) {
+		G.control = new Array(data.regions.length).fill(-1)
+	} else if (G.control.length < data.regions.length) {
+		while (G.control.length < data.regions.length)
+			G.control.push(-1)
+	}
+
+	while (G.location.length < data.units.length)
+		G.location.push(AVAILABLE)
+	while (G.commander_location.length < data.commanders.length)
+		G.commander_location.push(AVAILABLE)
+	while (G.reduced.length < data.units.length)
+		G.reduced.push(false)
+
+	if (!Array.isArray(G.deck))
+		G.deck = []
+	if (!Array.isArray(G.discard))
+		G.discard = []
+	if (!Array.isArray(G.removed))
+		G.removed = []
+	if (!Array.isArray(G.vp))
+		G.vp = [0, 0, 0, 0]
+	if (G.ops === undefined)
+		G.ops = 0
+	if (G.impulse === undefined)
+		G.impulse = 0
+}
+
 // === SETUP ===
 
 function on_setup(scenario, options) {
+	options = options || {}
 	var scn = data.scenarios[scenario]
 	if (!scn)
 		scn = data.scenarios["Standard"]
@@ -193,9 +280,7 @@ function on_setup(scenario, options) {
 
 	// Player seats, power ownership, power events, and diplomacy are separate
 	// composed state slices so future scenarios can remap players to powers.
-	G.players = data.players.map(p => ({
-		powers: p.powers.slice(),
-	}))
+	G.players = clone_players()
 	G.power_player = data.power_to_player.slice()
 	G.power_events = data.powers.map(() => [])
 	G.relations = create_relation_matrix()
@@ -615,6 +700,7 @@ exports.view = function (state, role) {
 	G = state
 	L = G.L
 	R = role
+	normalize_state()
 	var role_index = ROLES.indexOf(role)
 
 	// Initialize view object with complete game state
@@ -691,6 +777,7 @@ exports.action = function (state, role, action, argument) {
 	L = G.L
 	R = role
 	V = null
+	normalize_state()
 
 	var old_active = G.active
 
@@ -719,6 +806,7 @@ exports.finish = function (state, result, message) {
 	L = G.L
 	R = null
 	V = null
+	normalize_state()
 
 	_load()
 	finish(result, message)
@@ -732,6 +820,7 @@ exports.query = function (state, role, q) {
 	L = G.L
 	R = role
 	V = null
+	normalize_state()
 
 	_load()
 	var result = null
