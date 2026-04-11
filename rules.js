@@ -152,6 +152,28 @@ function card_ops(card_id) {
 	return data.cards[card_id].ops
 }
 
+function create_relation_matrix() {
+	var matrix = []
+	for (var a = 0; a < data.powers.length; ++a) {
+		var row = []
+		for (var b = 0; b < data.powers.length; ++b)
+			row.push(a === b ? data.RELATION_SELF : data.RELATION_NEUTRAL)
+		matrix.push(row)
+	}
+	return matrix
+}
+
+function create_formation_from_region(region) {
+	var units = own_units_in_region(region)
+	var limit = Math.min(units.length, stack_capacity(region))
+	return {
+		power: player_power(),
+		region,
+		units: units.slice(0, limit),
+		commanders: own_commanders_in_region(region),
+	}
+}
+
 // === SETUP ===
 
 function on_setup(scenario, options) {
@@ -168,6 +190,15 @@ function on_setup(scenario, options) {
 
 	// Region control
 	G.control = new Array(data.regions.length).fill(-1)
+
+	// Player seats, power ownership, power events, and diplomacy are separate
+	// composed state slices so future scenarios can remap players to powers.
+	G.players = data.players.map(p => ({
+		powers: p.powers.slice(),
+	}))
+	G.power_player = data.power_to_player.slice()
+	G.power_events = data.powers.map(() => [])
+	G.relations = create_relation_matrix()
 
 	// Apply scenario deployment
 	for (var uid in scn.deployment)
@@ -379,8 +410,10 @@ P.player_impulse = {
 
 	select_move_from(region) {
 		push_undo()
-		L.move_from = region
-		goto("select_move_to")
+		goto("select_move_to", {
+			move_from: region,
+			formation: create_formation_from_region(region),
+		})
 	},
 }
 
@@ -407,22 +440,18 @@ P.select_move_to = {
 	},
 
 	move_to(to) {
-		var from = L.move_from
-		var units = own_units_in_region(from)
-		var cap = stack_capacity(from)
-		var limit = Math.min(units.length, cap)
+		var formation = L.formation || create_formation_from_region(L.move_from)
+		var from = formation.region
 
 		// Move units (up to capacity)
 		var moved = 0
-		for (var i = 0; i < units.length && moved < limit; ++i) {
-			var u = units[i]
+		for (var u of formation.units) {
 			G.location[u] = to
 			moved++
 		}
 
 		// Also move own commanders
-		var cmds = own_commanders_in_region(from)
-		for (var c of cmds)
+		for (var c of formation.commanders)
 			G.commander_location[c] = to
 
 		G.ops -= 1
@@ -586,6 +615,7 @@ exports.view = function (state, role) {
 	G = state
 	L = G.L
 	R = role
+	var role_index = ROLES.indexOf(role)
 
 	// Initialize view object with complete game state
 	V = {
@@ -594,16 +624,21 @@ exports.view = function (state, role) {
 		turn: G.turn,
 		vp: G.vp,
 		control: G.control,
+		players: G.players,
+		power_player: G.power_player,
+		power_events: G.power_events,
+		relations: G.relations,
+		player_hand_size: G.players.map(p => p.powers.reduce((n, power) => n + G.hand[power].length, 0)),
 		location: G.location,
 		reduced: G.reduced,
 		commander_location: G.commander_location,
 		ops: G.ops,
-		hand: G.hand[R] || [],
+		hand: G.hand[role_index] || [],
 		hand_size: G.hand.map(h => h.length),
 		deck_size: G.deck.length,
 		discard_size: G.discard.length,
 		impulse: G.impulse,
-		power: R,
+		power: role_index,
 		passed: G.passed,
 	}
 

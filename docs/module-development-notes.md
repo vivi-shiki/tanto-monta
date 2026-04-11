@@ -80,6 +80,7 @@ PoG 的规模很大，但模式可以直接迁移：
 - `play.js` 不判断规则合法性，只根据 `view.actions` 高亮并调用 `send_action()`。
 - 隐藏信息必须由 `view()` 控制。例如手牌只给当前角色；其他玩家只看到手牌数量。
 - 地图控制、棋子位置、卡牌区最好用稳定索引数组表示，便于 JSON 存储、replay 和测试断言。
+- 核心对象关系采用组合式结构。玩家、势力、卡牌、原子行动、地区、编队、单位、事件的具体方案见 `docs/core-data-model.md`。
 
 当前 Tanto Monta 已有的主干状态包括：
 
@@ -90,6 +91,10 @@ PoG 的规模很大，但模式可以直接迁移：
 - `G.ops`：当前 impulse 剩余行动点。
 - `G.passed` / `G.impulse`：行动阶段轮转。
 - `G.L`：当前状态机栈。
+- `G.players` / `G.power_player`：玩家席位与势力归属。
+- `G.power_events`：势力已有事件/buff。
+- `G.relations`：势力之间的关系矩阵。
+- `L.formation`：执行移动等原子行动时创建的临时编队。
 
 ## 6. 回合与行动循环规律
 

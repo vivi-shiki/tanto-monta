@@ -11,6 +11,29 @@ const MUSLIM = 3
 
 data.power_name = ["France", "Spain", "Portugal", "Muslim"]
 
+data.powers = [
+	{ id: FRANCE, name: "France", role: "France", class_name: "france" },
+	{ id: SPAIN, name: "Spain", role: "Spain", class_name: "spain" },
+	{ id: PORTUGAL, name: "Portugal", role: "Portugal", class_name: "portugal" },
+	{ id: MUSLIM, name: "Muslim", role: "Muslim", class_name: "muslim" },
+]
+
+// Player seats are distinct from powers so a future scenario can let one player
+// control multiple powers without changing the rest of the data model.
+data.players = [
+	{ id: 0, name: "France Player", role: "France", powers: [FRANCE] },
+	{ id: 1, name: "Spain Player", role: "Spain", powers: [SPAIN] },
+	{ id: 2, name: "Portugal Player", role: "Portugal", powers: [PORTUGAL] },
+	{ id: 3, name: "Muslim Player", role: "Muslim", powers: [MUSLIM] },
+]
+
+data.power_to_player = [
+	0, // France
+	1, // Spain
+	2, // Portugal
+	3, // Muslim
+]
+
 // === UNIT TYPES ===
 
 const MILITIA = 0
@@ -30,6 +53,126 @@ const STRATEGIC = 1
 const KEY = 2
 const FORTRESS = 3
 const SPECIAL = 4
+
+// === CARD / ACTION / EVENT TYPES ===
+
+const CARD_EVENT = "event"
+const CARD_HOME = "home"
+const CARD_MANDATORY = "mandatory"
+const CARD_COMBAT = "combat"
+const CARD_RESPONSE = "response"
+const CARD_OPS_ONLY = "ops_only"
+
+const ACTION_PLAY_CARD_OPS = "play_card_ops"
+const ACTION_PLAY_EVENT = "play_event"
+const ACTION_PASS = "pass"
+const ACTION_RECRUIT_UNIT = "recruit_unit"
+const ACTION_MOVE_FORMATION = "move_formation"
+const ACTION_FIELD_BATTLE = "field_battle"
+const ACTION_SIEGE = "siege"
+const ACTION_BUILD_FORTRESS = "build_fortress"
+const ACTION_NAVAL_MOVE = "naval_move"
+const ACTION_EXPLORE = "explore"
+const ACTION_DIPLOMACY = "diplomacy"
+
+const RELATION_WAR = -1
+const RELATION_NEUTRAL = 0
+const RELATION_ALLIANCE = 1
+const RELATION_SELF = 2
+
+const EVENT_SCOPE_POWER = "power"
+const EVENT_SCOPE_REGION = "region"
+const EVENT_SCOPE_GLOBAL = "global"
+
+data.card_type_name = {
+	[CARD_EVENT]: "Event",
+	[CARD_HOME]: "Home",
+	[CARD_MANDATORY]: "Mandatory",
+	[CARD_COMBAT]: "Combat",
+	[CARD_RESPONSE]: "Response",
+	[CARD_OPS_ONLY]: "Ops Only",
+}
+
+data.atomic_actions = [
+	{
+		id: ACTION_PLAY_CARD_OPS,
+		name: "Play Card for OP",
+		common: true,
+		scope: "card",
+		description: "Use a card as an action point budget.",
+	},
+	{
+		id: ACTION_PLAY_EVENT,
+		name: "Play Event",
+		common: true,
+		scope: "card",
+		description: "Resolve the event text printed on a card.",
+	},
+	{
+		id: ACTION_PASS,
+		name: "Pass",
+		common: true,
+		scope: "impulse",
+		description: "Pass the current impulse.",
+	},
+	{
+		id: ACTION_RECRUIT_UNIT,
+		name: "Recruit Unit",
+		common: true,
+		scope: "power",
+		description: "Spend OP to place an available unit in a controlled region.",
+		costs: { [MILITIA]: 1, [REGULAR]: 2, [CAVALRY]: 3 },
+	},
+	{
+		id: ACTION_MOVE_FORMATION,
+		name: "Move Formation",
+		common: true,
+		scope: "formation",
+		description: "Temporarily select one stack and move it one region at a time.",
+	},
+	{
+		id: ACTION_FIELD_BATTLE,
+		name: "Field Battle",
+		common: true,
+		scope: "region",
+		description: "Resolve battle between opposing land forces in a non-fortress region.",
+	},
+	{
+		id: ACTION_SIEGE,
+		name: "Siege",
+		common: true,
+		scope: "region",
+		description: "Resolve attack against a fortified region.",
+	},
+	{
+		id: ACTION_BUILD_FORTRESS,
+		name: "Build Fortress",
+		common: false,
+		scope: "region",
+		description: "Build or improve a fortress marker.",
+	},
+	{
+		id: ACTION_NAVAL_MOVE,
+		name: "Naval Move",
+		common: false,
+		scope: "formation",
+		description: "Move naval units through a legal sea connection.",
+	},
+	{
+		id: ACTION_EXPLORE,
+		name: "Explore",
+		common: false,
+		scope: "power",
+		description: "Resolve an exploration or overseas voyage action.",
+	},
+	{
+		id: ACTION_DIPLOMACY,
+		name: "Diplomacy",
+		common: false,
+		scope: "power_pair",
+		description: "Change relation between two powers.",
+	},
+]
 
 // === REGIONS ===
 
@@ -304,6 +447,72 @@ data.home_cards = [
 	{ id: 13, name: "Home 13", ops: 2, power: null },
 ]
 
+for (var c = 1; c < data.cards.length; ++c) {
+	data.cards[c].type ??= CARD_EVENT
+	data.cards[c].actions ??= [ACTION_PLAY_CARD_OPS, ACTION_PLAY_EVENT]
+	data.cards[c].image ??= "event_" + String(c).padStart(2, "0")
+	data.cards[c].text ??= data.cards[c].name
+}
+
+for (var h = 0; h < data.home_cards.length; ++h) {
+	data.home_cards[h].type ??= CARD_HOME
+	data.home_cards[h].actions ??= [ACTION_PLAY_CARD_OPS, ACTION_PLAY_EVENT]
+	data.home_cards[h].image ??= "home_" + String(data.home_cards[h].id).padStart(2, "0")
+	data.home_cards[h].text ??= data.home_cards[h].name
+}
+
+for (var unit of data.units) {
+	unit.kind ??= unit.type
+	unit.quantity ??= 1
+}
+
+// Power events are persistent or temporary modifiers attached to a power.
+// Concrete card text can later attach these ids to G.power_events[power].
+data.events = [
+	{
+		id: "alhambra",
+		name: "Alhambra",
+		scope: EVENT_SCOPE_POWER,
+		description: "Placeholder for a persistent power event or VP marker.",
+		effects: [],
+	},
+	{
+		id: "joanna",
+		name: "Joanna",
+		scope: EVENT_SCOPE_POWER,
+		description: "Placeholder for a dynastic or succession event.",
+		effects: [],
+	},
+	{
+		id: "wedding",
+		name: "Wedding",
+		scope: EVENT_SCOPE_POWER,
+		description: "Placeholder for a marriage event or VP marker.",
+		effects: [],
+	},
+	{
+		id: "reconquista",
+		name: "Reconquista",
+		scope: EVENT_SCOPE_POWER,
+		description: "Placeholder for a military campaign event.",
+		effects: [],
+	},
+	{
+		id: "master_of_atlantic",
+		name: "Master of the Atlantic",
+		scope: EVENT_SCOPE_POWER,
+		description: "Placeholder for exploration or naval supremacy effects.",
+		effects: [],
+	},
+	{
+		id: "morisco_uprising",
+		name: "Morisco Uprising",
+		scope: EVENT_SCOPE_REGION,
+		description: "Placeholder for a regional unrest or uprising effect.",
+		effects: [],
+	},
+]
+
 // === SCENARIOS & INITIAL DEPLOYMENT ===
 
 // 1470 scenario: starting positions { unit_id: region_id }
@@ -374,12 +583,44 @@ data.KEY = KEY
 data.FORTRESS = FORTRESS
 data.SPECIAL = SPECIAL
 
+// Card types
+data.CARD_EVENT = CARD_EVENT
+data.CARD_HOME = CARD_HOME
+data.CARD_MANDATORY = CARD_MANDATORY
+data.CARD_COMBAT = CARD_COMBAT
+data.CARD_RESPONSE = CARD_RESPONSE
+data.CARD_OPS_ONLY = CARD_OPS_ONLY
+
+// Atomic action ids
+data.ACTION_PLAY_CARD_OPS = ACTION_PLAY_CARD_OPS
+data.ACTION_PLAY_EVENT = ACTION_PLAY_EVENT
+data.ACTION_PASS = ACTION_PASS
+data.ACTION_RECRUIT_UNIT = ACTION_RECRUIT_UNIT
+data.ACTION_MOVE_FORMATION = ACTION_MOVE_FORMATION
+data.ACTION_FIELD_BATTLE = ACTION_FIELD_BATTLE
+data.ACTION_SIEGE = ACTION_SIEGE
+data.ACTION_BUILD_FORTRESS = ACTION_BUILD_FORTRESS
+data.ACTION_NAVAL_MOVE = ACTION_NAVAL_MOVE
+data.ACTION_EXPLORE = ACTION_EXPLORE
+data.ACTION_DIPLOMACY = ACTION_DIPLOMACY
+
+// Power relation values
+data.RELATION_WAR = RELATION_WAR
+data.RELATION_NEUTRAL = RELATION_NEUTRAL
+data.RELATION_ALLIANCE = RELATION_ALLIANCE
+data.RELATION_SELF = RELATION_SELF
+
+// Event scopes
+data.EVENT_SCOPE_POWER = EVENT_SCOPE_POWER
+data.EVENT_SCOPE_REGION = EVENT_SCOPE_REGION
+data.EVENT_SCOPE_GLOBAL = EVENT_SCOPE_GLOBAL
+
 // Special locations
 data.ELIMINATED = -1
 data.AVAILABLE = -2
 
 // CSS class mappings
-data.POWER_CLASS = ["france", "spain", "portugal", "muslim"]
+data.POWER_CLASS = data.powers.map(p => p.class_name)
 
 // === EXPORT ===
 

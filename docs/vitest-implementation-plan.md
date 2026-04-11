@@ -69,10 +69,13 @@ public/tanto-monta/
   vitest.config.js
   test/
     helpers.js
+    data-model.test.js
     setup.test.js
     action-loop.test.js
     recruit.test.js
     movement.test.js
+    diplomacy.test.js
+    event-buffs.test.js
     victory.test.js
 ```
 
@@ -127,7 +130,19 @@ function expectAction(view, action, arg) {
 
 ## 4. 自然语言测试用例草案
 
-### A. 模组契约与 setup
+### A. 核心静态数据模型
+
+1. `data.players` 应定义四个玩家席位，每个席位拥有 `id`、`role` 和至少一个 `powers`。
+2. `data.powers` 应定义四个势力，每个势力拥有稳定的 `id`、`name`、`role` 和 `class_name`。
+3. `data.power_to_player` 应把每个势力映射到一个默认玩家席位。
+4. `data.atomic_actions` 应包含 `play_card_ops`、`play_event`、`pass`、`recruit_unit`、`move_formation`、`field_battle`、`siege`、`naval_move`、`explore`、`diplomacy`。
+5. 每张普通卡牌都应有 `type`、`actions`、`image` 和 `text` 字段。
+6. 每张普通卡牌的 `actions` 至少应包含 `play_card_ops`；后续有事件文本的卡牌还应能包含 `play_event`。
+7. 每个单位都应有 `type`、`kind`、`power`、`quantity`、`strength` 和 `image`。
+8. `data.events` 应定义事件 buff 的 `id`、`name`、`scope`、`description` 和 `effects`。
+9. 外交关系常量应包括 war、neutral、alliance、self，并且数值能用于关系矩阵。
+
+### B. 模组契约与 setup
 
 1. 当调用 `rules.setup(12345, "Standard", {})` 时，应返回一个可 JSON 序列化的 state，包含 `active`、`seed`、`log`、`undo`、`turn`、`vp`、`location`、`control`、`deck`、`discard`、`hand`、`L`。
 2. setup 后 `active` 应是 `rules.roles` 中的合法角色名，或后续按规则修正为行动顺序的首位角色。
@@ -135,8 +150,12 @@ function expectAction(view, action, arg) {
 4. setup 后 deck 数量应等于 64 减去已发手牌总数，discard 应为空。
 5. setup 后初始部署应与 `data.scenarios.Standard.deployment` 一致，初始控制应与 `data.scenarios.Standard.control` 一致。
 6. 同一个 seed 重复 setup 应得到相同的 deck 顺序、手牌和初始状态；不同 seed 可以得到不同 deck 顺序。
+7. setup 后 `G.players` 应复制 `data.players[].powers`，但不应复制完整卡牌对象。
+8. setup 后 `G.power_player` 应等于 `data.power_to_player`。
+9. setup 后 `G.power_events` 应为每个势力提供一个空数组。
+10. setup 后 `G.relations` 应是四乘四矩阵，对角线为 `RELATION_SELF`，非对角线默认 `RELATION_NEUTRAL`。
 
-### B. view 与隐藏信息
+### C. view 与隐藏信息
 
 1. 当前 active 角色调用 `view()` 时，应包含 `actions`，且 prompt 表示可以打牌或 pass。
 2. 非 active 角色调用 `view()` 时，不应包含可执行 `actions`，prompt 应是等待当前 active 角色行动。
@@ -144,8 +163,10 @@ function expectAction(view, action, arg) {
 4. 非当前角色的 `view.hand` 不应暴露 active 角色手牌。当前代码会按传入 role 返回该 role 自己的手牌；后续如果要隐藏观察者信息，应为 Observer 添加专门断言。
 5. `view.hand_size` 可以显示每个玩家手牌数量，但不能泄露具体卡牌。
 6. 游戏结束后 `view()` 应返回结束提示，且不再给任何角色可执行动作。
+7. `view.players`、`view.power_player`、`view.power_events`、`view.relations` 应暴露给客户端用于渲染和调试。
+8. `view.player_hand_size` 应按玩家控制的所有势力手牌数量聚合计算。
 
-### C. 行动循环
+### D. 行动循环
 
 1. 在行动阶段且当前玩家没有 OP 时，合法动作应包括该玩家手牌中的 `play_card` 和 `pass`。
 2. 当前玩家执行 `pass` 后，应记录日志，清空 `G.ops`，并切到下一名未 pass 玩家。
@@ -154,15 +175,16 @@ function expectAction(view, action, arg) {
 5. 行动顺序应按规则概要为 Muslim、Portugal、Spain、France；如果暂时沿用当前代码顺序，应把测试标为当前实现测试，并另建一条 pending 测试描述规则目标。
 6. active 变化后 undo 栈应被清空。
 
-### D. 打牌作为 OP
+### E. 打牌作为 OP
 
 1. 当前玩家打出手牌中的一张牌后，该牌应从 `G.hand[player]` 移除，加入 `G.discard`。
 2. `G.ops` 应等于 `data.cards[cardId].ops`。
 3. 日志应记录玩家打出卡牌和获得 OP 的信息。
 4. 打出不在当前玩家手牌中的牌不应改变手牌、discard 或 OP；后续建议把当前“静默不变”改成显式错误或只通过 view.actions 防止。
 5. 当前玩家有 OP 时，view 应显示可消耗 OP 的动作，例如 recruit 和 move，并显示 `end_impulse`。
+6. 使用卡牌作为 OP 时，不应修改 `G.power_events`，除非后续明确实现“同时触发事件”的卡牌。
 
-### E. 招募
+### F. 招募
 
 1. 当前玩家有至少 1 OP，且在自己控制且未满堆叠的区域，应可招募 militia。
 2. 当前玩家有至少 2 OP，应可招募 regular；有至少 3 OP，应可招募 cavalry。
@@ -173,17 +195,28 @@ function expectAction(view, action, arg) {
 7. 当目标区域达到堆叠上限时，不应出现 recruit action。
 8. 当对应类型没有 available 单位时，不应出现对应 recruit action。
 
-### F. 移动
+### G. 移动与临时编队
 
 1. 当前玩家有 OP 且某区域有己方单位时，该区域应出现在 `select_move_from` 合法动作里。
-2. 选择移动起点后，应进入 `select_move_to` 状态，prompt 要求选择目的地。
-3. `select_move_to` 只应列出邻接区域，不应列出非邻接区域。
-4. 执行 `move_to` 后，起点的己方单位应移动到目的地，己方指挥官也应随同移动。
-5. 移动后 `G.ops` 应减少 1，并返回 `player_impulse`。
-6. `cancel` 移动应撤销之前的 `select_move_from` 产生的 undo 快照，并回到原 impulse 局面。
-7. 后续新增战斗前，移动进入敌方单位区域的规则应单独测试：是否允许进入、是否触发野战、是否阻止继续移动。
+2. 选择移动起点后，应创建临时 `L.formation`，其中包含 `power`、`region`、`units` 和 `commanders`。
+3. `L.formation.units` 应只包含起点区域内属于当前势力、且本次移动允许带走的单位。
+4. 选择移动起点后，应进入 `select_move_to` 状态，prompt 要求选择目的地。
+5. `select_move_to` 只应列出邻接区域，不应列出非邻接区域。
+6. 执行 `move_to` 后，`L.formation.units` 应移动到目的地，`L.formation.commanders` 也应随同移动。
+7. 移动后 `G.ops` 应减少 1，并返回 `player_impulse`。
+8. 移动结算后，编队不应成为长期 `G` 状态。
+9. `cancel` 移动应撤销之前的 `select_move_from` 产生的 undo 快照，并回到原 impulse 局面。
+10. 后续新增战斗前，移动进入敌方单位区域的规则应单独测试：是否允许进入、是否触发野战、是否阻止继续移动。
 
-### G. 控制与 VP
+### H. 势力关系与事件 buff
+
+1. 给定 prepared state，当 `G.relations[France][Spain]` 设置为 alliance 时，反向关系也应同步为 alliance；如果当前尚未实现 helper，应写成 `test.todo`。
+2. 给定 prepared state，当 `G.relations[Spain][Muslim]` 设置为 war 时，攻击/战斗 action 才应允许生成；当前尚未实现战斗时写成 `test.todo`。
+3. 给定 prepared state，当某卡牌事件添加 `"alhambra"` 到 `G.power_events[Spain]` 时，该 buff 应能在 view 中看到。
+4. 同一个 power event 不应重复添加两次；如果规则允许叠加，应在事件定义中显式标记 stackable。
+5. 使用 OP 打牌不应添加 power event；使用 event 打牌才应添加对应事件。
+
+### I. 控制与 VP
 
 1. `victory_check` 应按 `G.control` 中每个区域的 `data.regions[r].vp` 计算四个势力 VP。
 2. 控制 KEY 区域应给更高 VP，STRATEGIC 区域给次级 VP，普通区域给 0。
@@ -191,13 +224,13 @@ function expectAction(view, action, arg) {
 4. 到达最大回合时，应比较四方 VP，最高者获胜。
 5. 若出现 VP 平局，应按正式规则补充 tie-breaker；当前代码默认保留先出现的最高分玩家，这需要被标注为临时行为。
 
-### H. 短局选项
+### J. 短局选项
 
 1. 当 setup options 含 `short_game: true` 时，`G.short_game` 应为 true。
 2. 短局最大回合应为 5；普通局最大回合应为 7。
 3. 当 `G.turn >= 5` 且 `G.short_game` 为 true 时，`victory_check` 应结束游戏。
 
-### I. Undo 与确定性
+### K. Undo 与确定性
 
 1. 可撤销动作执行前应产生 undo 快照。
 2. 执行 undo 后，state 应回到动作前，包括手牌、discard、ops、位置、日志长度和状态机位置。
@@ -205,7 +238,7 @@ function expectAction(view, action, arg) {
 4. 抽牌/洗牌等随机信息确定后，如果会揭示隐藏信息，应清空 undo 或禁止回退到可利用随机结果的点。
 5. replay 关键路径应可用固定 seed 重放同样动作序列得到同样 state。
 
-### J. 未来战斗与围城
+### L. 未来战斗与围城
 
 这些是规则目标测试，等实现前可以先写成 `test.todo` 或自然语言清单：
 
@@ -253,3 +286,5 @@ function expectAction(view, action, arg) {
 - 战斗、围城、海军、探索、区域占领触发控制变化尚未实现。
 - VP 平局 tie-breaker 未按正式规则实现。
 - 当前 `view()` 对传入 role 的 hand 直接返回，后续要明确 Observer 和信息隐藏策略。
+- 当前 `G.players` 只保存玩家控制的势力，不保存手牌副本；手牌仍以 `G.hand[power]` 为唯一真相。
+- 当前 `G.power_events` 和 `G.relations` 已初始化，但还没有事件牌/外交 action 会修改它们。
