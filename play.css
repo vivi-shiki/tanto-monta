@@ -42,6 +42,12 @@ body.Muslim header.your_turn { background-color: #b87843; }
 
 /* === MAP === */
 
+#mapwrap {
+	position: relative;
+	width: 5298px;
+	height: 3449px;
+}
+
 #map {
 	position: absolute;
 	width: 5298px;
@@ -49,6 +55,19 @@ body.Muslim header.your_turn { background-color: #b87843; }
 	background-image: url(public/board/main.jpg);
 	background-size: cover;
 	background-repeat: no-repeat;
+}
+
+/* === HEX TEST MARKERS === */
+
+.hex-marker {
+	box-sizing: border-box;
+	position: absolute;
+	width: 110px;
+	height: 110px;
+	background-color: rgba(255, 0, 0, 0.16);
+	border: 1px solid rgba(255, 0, 0, 0.75);
+	pointer-events: none;
+	z-index: 3;
 }
 
 /* === REGIONS === */

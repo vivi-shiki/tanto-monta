@@ -20,6 +20,7 @@ let ui = {
 	pieces: document.getElementById("pieces"),
 	status: document.getElementById("status"),
 	spaces: [],
+	hex_markers: [],
 	unit_elements: [],
 	commander_elements: [],
 	card_elements: [],
@@ -31,6 +32,14 @@ let gameView = null
 
 function build_region(r) {
 	let region = regions[r]
+	let marker = document.createElement("div")
+	marker.className = "hex-marker"
+	marker.style.left = (region.x - 55) + "px"
+	marker.style.top = (region.y - 55) + "px"
+	marker.title = `Hex ${r}: ${region.name}`
+	ui.pieces.appendChild(marker)
+	ui.hex_markers[r] = marker
+
 	let elt = document.createElement("div")
 	elt.className = "region"
 	elt.region = r
@@ -310,6 +319,16 @@ function on_init() {
 	for (let c = 1; c < cards.length; ++c)
 		build_card(c)
 
+	fit_map_to_width()
+}
+
+function fit_map_to_width() {
+	let mapwrap = document.getElementById("mapwrap")
+	if (!mapwrap)
+		return
+	mapwrap.dataset.fit = "width"
+	if (typeof window.update_zoom === "function")
+		requestAnimationFrame(() => window.update_zoom())
 }
 
 function on_update() {
