@@ -1,0 +1,13 @@
+{
+	"name": "tanto-monta",
+	"version": "0.0.0",
+	"private": true,
+	"type": "commonjs",
+	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"devDependencies": {
+		"vitest": "^4.0.0"
+	}
+}
